@@ -73,6 +73,7 @@ contract PositionManager is
         fundingPeriod = _fundingPeriod;
         fundingBufferPeriod = _fundingPeriod / 2;
         maxFindingWordsIndex = _maxFindingWordsIndex;
+        maxWordRangeForLimitOrder = _maxFindingWordsIndex;
         priceFeed = IChainLinkPriceFeed(_priceFeed);
         counterParty = _counterParty;
         leverage = 125;
@@ -228,18 +229,19 @@ contract PositionManager is
                 _pip <= _singleSlot.pip,
                 Errors.VL_LONG_PRICE_THAN_CURRENT_PRICE
             );
-            require(
-                int128(_pip) >=
-                (int256(getUnderlyingPriceInPip()) -
-                int128(maxFindingWordsIndex * 250)), Errors.VL_MUST_CLOSE_TO_INDEX_PRICE
-            );
+            int256 maxPip = int256(getUnderlyingPriceInPip()) - int128(maxWordRangeForLimitOrder * 250);
+            if (maxPip > 0) {
+                require(int128(_pip) >= maxPip, Errors.VL_MUST_CLOSE_TO_INDEX_PRICE_LONG);
+            } else {
+                require(_pip >= 1, Errors.VL_MUST_CLOSE_TO_INDEX_PRICE_LONG);
+            }
         } else {
             require(
                 _pip >= _singleSlot.pip,
                 Errors.VL_SHORT_PRICE_LESS_CURRENT_PRICE
             );
             require(
-                _pip <= (getUnderlyingPriceInPip() + maxFindingWordsIndex * 250), Errors.VL_MUST_CLOSE_TO_INDEX_PRICE
+                _pip <= (getUnderlyingPriceInPip() + maxWordRangeForLimitOrder * 250), Errors.VL_MUST_CLOSE_TO_INDEX_PRICE_SHORT
             );
         }
         bool hasLiquidity = liquidityBitmap.hasLiquidity(_pip);
@@ -290,7 +292,16 @@ contract PositionManager is
             uint256 fee
         )
     {
+        uint256 underlyingPip = getUnderlyingPriceInPip();
         (sizeOut, openNotional) = _internalOpenMarketOrder(_size, _isBuy, 0);
+        uint128 _afterPip = singleSlot.pip;
+
+        bool pass = _isBuy
+        ? _afterPip <= (underlyingPip + maxFindingWordsIndex * 250)
+        : int128(_afterPip) >= (int256(underlyingPip) - int128(maxFindingWordsIndex * 250));
+        if (!pass) {
+            revert(Errors.VL_MARKET_ORDER_MUST_CLOSE_TO_INDEX_PRICE);
+        }
         fee = calcFee(openNotional);
         entryPrice = (openNotional * getBasisPoint()) / _size;
     }
@@ -542,7 +553,7 @@ contract PositionManager is
         uint128 _fromPip,
         uint256 _dataLength,
         bool _toHigher
-    ) public view override returns (PipLiquidity[] memory, uint128) {
+    ) public view override returns (PipLiquidity[] memory, uint128, uint8) {
         uint128[] memory allInitializedPips = new uint128[](
             uint128(_dataLength)
         );
@@ -559,7 +570,7 @@ contract PositionManager is
                 liquidity: tickPosition[allInitializedPips[i]].liquidity
             });
         }
-        return (allLiquidity, allInitializedPips[_dataLength - 1]);
+        return (allLiquidity, allInitializedPips[_dataLength - 1], singleSlot.isFullBuy);
     }
 
     function getQuoteAsset() public view override returns (IERC20) {
@@ -678,7 +689,6 @@ contract PositionManager is
     //******************************************************************************************************************
 
     function updateMaxPercentMarketMarket(uint16 newMarketMakerSlipage) public onlyOwner {
-
         emit MaxMarketMakerSlipageUpdated(maxMarketMakerSlipage, newMarketMakerSlipage);
         maxMarketMakerSlipage = newMarketMakerSlipage;
 
@@ -708,6 +718,15 @@ contract PositionManager is
     {
         maxFindingWordsIndex = _newMaxFindingWordsIndex;
         emit UpdateMaxFindingWordsIndex(_newMaxFindingWordsIndex);
+    }
+
+    function updateMaxWordRangeForLimitOrder(uint128 _newMaxWordRangeForLimitOrder)
+        public
+        override
+        onlyOwner
+    {
+        maxWordRangeForLimitOrder = _newMaxWordRangeForLimitOrder;
+        emit MaxWordRangeForLimitOrderUpdated(_newMaxWordRangeForLimitOrder);
     }
 
     function updateBasisPoint(uint64 _newBasisPoint) public override onlyOwner {
@@ -764,9 +783,13 @@ contract PositionManager is
         (remainingSize, partialFilled, isBuy) = _tickPosition.cancelLimitOrder(
             _orderId
         );
+        // if that pip doesn't have liquidity after closed order, toggle pip to uninitialized
         if (_tickPosition.liquidity == 0) {
             liquidityBitmap.toggleSingleBit(_pip, false);
-            singleSlot.isFullBuy = 0;
+            // only unset isFullBuy when cancel order pip == current pip
+            if (_pip == singleSlot.pip) {
+                singleSlot.isFullBuy = 0;
+            }
         }
         emit LimitOrderCancelled(isBuy, _orderId, _pip, remainingSize);
     }
@@ -801,7 +824,7 @@ contract PositionManager is
         SingleSlot memory _initialSingleSlot = singleSlot;
         //save gas
         SwapState memory state = SwapState({
-            remainingSize: _size,
+            remainingSize: uint128(_size),
             pip: _initialSingleSlot.pip
         });
         uint128 startPip;
@@ -858,14 +881,14 @@ contract PositionManager is
                     if (liquidity > state.remainingSize) {
                         // pip position will partially filled and stop here
                         tickPosition[step.pipNext].partiallyFill(
-                            uint128(state.remainingSize)
+                            state.remainingSize
                         );
                         openNotional += ((state.remainingSize *
                             pipToPrice(step.pipNext)) / BASE_BASIC_POINT);
                         // remaining liquidity at current pip
                         remainingLiquidity =
                             liquidity -
-                            uint128(state.remainingSize);
+                            state.remainingSize;
                         state.remainingSize = 0;
                         state.pip = step.pipNext;
                         isFullBuy = uint8(

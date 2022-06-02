@@ -6,12 +6,13 @@ import {
     CreatePositionHouseFunction,
     CreateChainLinkPriceFeed,
     CreatePositionHouseConfigurationProxyInput,
-    CreatePositionHouseViewerInput
+    CreatePositionHouseViewerInput, CreatePositionNotionalConfigProxy
 } from "./types";
 import {DeployDataStore} from "./DataStore";
 import {verifyContract} from "../scripts/utils";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {cat} from "shelljs";
 
 
 export class ContractWrapperFactory {
@@ -71,6 +72,13 @@ export class ContractWrapperFactory {
             const instance = await upgrades.deployProxy(PositionManager, contractArgs);
             console.log("wait for deploy")
             await instance.deployed();
+            if(args.leverage){
+                try{
+                    await (await instance.updateLeverage(args.leverage)).wait()
+                }catch (e) {
+                    console.log(`Update leverage failed`, e)
+                }
+            }
             const address = instance.address.toString().toLowerCase();
             console.log(`${symbol} positionManager address : ${address}`)
             await this.db.saveAddressByKey(saveKey, address);
@@ -102,7 +110,8 @@ export class ContractWrapperFactory {
         } else {
             const contractArgs = [
                 args.insuranceFund,
-                args.positionHouseConfigurationProxy
+                args.positionHouseConfigurationProxy,
+                args.positionNotionalConfigProxy
                 // args.feePool
             ];
 
@@ -200,7 +209,21 @@ export class ContractWrapperFactory {
             await this.db.saveAddressByKey('InsuranceFund', address);
 
         }
+    }
 
+    async createPositionNotionConfigProxy(args: CreatePositionNotionalConfigProxy) {
+        const PositionNotionalConfigProxy = await this.hre.ethers.getContractFactory("PositionNotionalConfigProxy");
+        const positionNotionalConfigProxyContractAddress = await this.db.findAddressByKey('PositionNotionalConfigProxy');
+        if(positionNotionalConfigProxyContractAddress){
+            const upgraded = await this.hre.upgrades.upgradeProxy(positionNotionalConfigProxyContractAddress, PositionNotionalConfigProxy);
+            await this.verifyImplContract(upgraded.deployTransaction);
+        }else{
+            const instance = await this.hre.upgrades.deployProxy(PositionNotionalConfigProxy, []);
+            await instance.deployed();
+            const address = instance.address.toString().toLowerCase();
+            console.log(`PositionNotionConfigProxy address : ${address}`)
+            await this.db.saveAddressByKey('PositionNotionalConfigProxy', address);
+        }
     }
 
     async createPositionHouseFunctionLibrary(args: CreatePositionHouseFunction) {

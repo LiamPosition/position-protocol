@@ -2317,6 +2317,11 @@ describe('Test Margin Intergration', function () {
             const filePath = require('path').resolve(__dirname, '../integration/test-cases/EGE8-81.json')
             await testCaseProcessor.process(filePath)
         })
+
+        it("EGE-8: Row 1111", async () => {
+            const filePath = require('path').resolve(__dirname, '../integration/test-cases/EGE8-1111.json')
+            await testCaseProcessor.process(filePath)
+        })
     });
 
     describe('margin with funding rate', function () {

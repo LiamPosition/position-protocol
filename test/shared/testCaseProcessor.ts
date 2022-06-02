@@ -71,6 +71,12 @@ export default class TestCaseProcessor {
                 case "assertTotalReceived":
                     await this.processAssertTotalReceived(step, this.traders[data.targetTrader], balanceOfTargetTraderBeforeTestcase)
                     break
+                case "assertMargin":
+                    await this.processAssertMargin(step, this.traders[data.targetTrader])
+                    break
+                case "assertEntry":
+                    await this.processAssertEntry(step, this.traders[data.targetTrader])
+                    break
             }
         }
     }
@@ -167,6 +173,17 @@ export default class TestCaseProcessor {
         const exchangedQuoteAmount = BigNumber.from(balanceOfTargetTraderAfterTestcase).sub(BigNumber.from(balanceOfTargetTraderBeforeTestcase))
         console.log(`AssertTotalReceived: actual ${exchangedQuoteAmount}. expected ${step.value}`)
         expect(exchangedQuoteAmount).eq(step.value)
+    }
+
+    async processAssertMargin(step: any, targetTrader: SignerWithAddress) {
+        const position = await this.positionHouse.getPosition(this.positionManager.address, targetTrader.address)
+        expect(position.margin).eq(step.value)
+    }
+
+    async processAssertEntry(step: any, targetTrader: SignerWithAddress) {
+        const position = await this.positionHouse.getPosition(this.positionManager.address, targetTrader.address)
+        const entry = position.openNotional.div(position.quantity).toNumber().toFixed(3)
+        expect(entry).eq(step.value)
     }
 
     async processPayFunding(step: any) {

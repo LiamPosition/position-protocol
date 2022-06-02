@@ -599,7 +599,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: BigNumber.from('2'),
                 _trader: trader2,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
             console.log("step 5")
             // STEP 5
@@ -661,7 +663,7 @@ describe('Test Margin Intergration', function () {
             const balanceOfTrader1AfterTestcase = await bep20Mintable.balanceOf(trader1.address)
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
-            expect(exchangedQuoteAmount).eq("-2008")
+            expect(exchangedQuoteAmount).eq("-2004")
         })
 
         it("should get correct amount of claimable fund when add and remove margin then close position by limit order 2", async () => {
@@ -747,7 +749,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: BigNumber.from('3'),
                 _trader: trader1,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
             console.log("step 10")
             // STEP 10
@@ -779,7 +783,7 @@ describe('Test Margin Intergration', function () {
             const balanceOfTrader1AfterTestcase = await bep20Mintable.balanceOf(trader1.address)
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
-            expect(exchangedQuoteAmount).eq("3390")
+            expect(exchangedQuoteAmount).eq("3395")
         })
 
         it("should get correct amount of claimable fund when add and remove margin then close position by limit order 3", async () => {
@@ -857,7 +861,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: BigNumber.from('5'),
                 _trader: trader1,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
 
             await phTT.openMarketPosition({
@@ -957,7 +963,7 @@ describe('Test Margin Intergration', function () {
             const balanceOfTrader1AfterTestcase = await bep20Mintable.balanceOf(trader1.address)
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
-            expect(exchangedQuoteAmount).eq("3096")
+            expect(exchangedQuoteAmount).eq("3095")
         })
 
         it("should get correct claimableAmount when create position by both limit and market order, reduce by market > created market order then close by limit", async () => {
@@ -1039,7 +1045,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: toWei('1'),
                 _trader: trader1,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
 
             await phTT.openMarketPosition({
@@ -1053,8 +1061,8 @@ describe('Test Margin Intergration', function () {
             );
 
             console.log("third time expect getClaimAmount")
-            // claimableAmount += (newOrderMargin + pnl) = 5500 + (price * quantity / leverage + pnl) = 5500 + 350 + 166.67 = 6016.666
-            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("6016666600000000000000"))
+            // claimableAmount +=  pnl = 5500 + pnl = 5500 + 166.67 = 5666.6666
+            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("5666666600000000000000"))
 
             await phTT.debugPosition(trader1, fundingRateTest)
             // after this order the trader1's position should have
@@ -1083,8 +1091,8 @@ describe('Test Margin Intergration', function () {
                 }
             );
             console.log("fourth time expect getClaimAmount")
-            // claimableAmount += (newOrderMargin + pnl + manualMargin) = 6016.666 + (price * quantity / leverage + pnl + manual) =  6016.666 + 3500 * 2 / 10 + 333.34 + 2000 = 9050
-            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("9050095000000000000000"))
+            // claimableAmount +=  pnl + manualMargin = 5666.6666 + pnl + manual =  5666.6666 + 333.333 + 2000 = 7999.9998
+            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("7999999800000000000000"))
 
             console.log("step 5")
             // STEP 5
@@ -1094,7 +1102,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: toWei('7'),
                 _trader: trader3,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
 
             console.log("debug margin")
@@ -1121,7 +1131,7 @@ describe('Test Margin Intergration', function () {
             console.log("--------- claim amount after market")
             console.log("debug margin after")
             await phTT.debugPosition(trader1, fundingRateTest)
-            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("5849995000000000000000"))
+            expect(await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).eq(BigNumber.from("4799999790000000000000"))
 
             console.log("position map after close market", (await positionHouse.positionMap(fundingRateTest.address, trader1.address)).toString())
 
@@ -1161,7 +1171,7 @@ describe('Test Margin Intergration', function () {
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
             console.log((await insuranceFund.totalFee()).toString())
-            expect(exchangedQuoteAmount).eq(BigNumber.from("3093504800000000000000"))
+            expect(exchangedQuoteAmount).eq(BigNumber.from("3094500100000000000000"))
         })
 
         it("should get profit after open position by 8 market + 10 limit and close by 9 market + 9 limit", async () => {
@@ -1268,7 +1278,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: toWei('9'),
                 _trader: trader1,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
 
             await phTT.openMarketPosition({
@@ -1285,7 +1297,7 @@ describe('Test Margin Intergration', function () {
             const balanceOfTrader1AfterTestcase = await bep20Mintable.balanceOf(trader1.address)
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
-            expect(exchangedQuoteAmount).eq(BigNumber.from("3287519700000000000000"))
+            expect(exchangedQuoteAmount).eq(BigNumber.from("3291569700000000000000"))
         })
 
         it("should get correct claimableAmount when create position by both limit and market, reverse market with quantity > created market then increase by market again", async () => {
@@ -1368,7 +1380,9 @@ describe('Test Margin Intergration', function () {
                     leverage: 10,
                     quantity: toWei('1'),
                     _trader: trader1,
-                    _positionManager: fundingRateTest
+                    _positionManager: fundingRateTest,
+                    // can skip check balance cause this is close order, no need to deposit fund
+                    skipCheckBalance: true
                 })
 
                 await phTT.openMarketPosition({
@@ -1465,7 +1479,9 @@ describe('Test Margin Intergration', function () {
                     leverage: 10,
                     quantity: toWei('3'),
                     _trader: trader2,
-                    _positionManager: fundingRateTest
+                    _positionManager: fundingRateTest,
+                    // can skip check balance cause this is close order, no need to deposit fund
+                    skipCheckBalance: true
                 })
 
                 await phTT.openMarketPosition({
@@ -1498,7 +1514,7 @@ describe('Test Margin Intergration', function () {
                 const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
                 console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
                 console.log((await insuranceFund.totalFee()).toString())
-                expect(exchangedQuoteAmount).eq("3091465100000000000000")
+                expect(exchangedQuoteAmount).eq("3093480100000000000000")
             }
         })
 
@@ -1573,7 +1589,9 @@ describe('Test Margin Intergration', function () {
                 leverage: 10,
                 quantity: toWei(3),
                 _trader: trader1,
-                _positionManager: fundingRateTest
+                _positionManager: fundingRateTest,
+                // can skip check balance cause this is close order, no need to deposit fund
+                skipCheckBalance: true
             })
 
             // open market
@@ -1588,7 +1606,8 @@ describe('Test Margin Intergration', function () {
             );
             console.log("before get claimable amount")
             console.log((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString())
-            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(3500))
+            // not included margin of close order so: claimAmount = before - closeOrderMargin = 3500 - 3500*3/10 = 2450
+            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(2450))
 
 
             console.log("STEP 4")
@@ -1614,7 +1633,7 @@ describe('Test Margin Intergration', function () {
             );
             console.log("before get claimable amount")
             console.log((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString())
-            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(5600))
+            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(4550))
 
             await phTT.dumpPrice({
                 toPrice: 3400,
@@ -1647,7 +1666,7 @@ describe('Test Margin Intergration', function () {
             );
             console.log("before get claimable amount")
             console.log((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString())
-            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(4535))
+            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(3485))
 
             console.log("STEP 6")
             // STEP 6
@@ -1663,12 +1682,12 @@ describe('Test Margin Intergration', function () {
             );
             console.log("before get claimable amount")
             console.log((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString())
-            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(6985))
+            expect((await positionHouseViewer.getClaimAmount(fundingRateTest.address, trader1.address)).toString()).eq(toWei(4235))
             await positionHouse.connect(trader1).claimFund(fundingRateTest.address)
             const balanceOfTrader1AfterTestcase = await bep20Mintable.balanceOf(trader1.address)
             const exchangedQuoteAmount = BigNumber.from(balanceOfTrader1AfterTestcase).sub(BigNumber.from(balanceOfTrader1BeforeTestcase))
             console.log("exchangedQuoteAmount", exchangedQuoteAmount.toString())
-            expect(exchangedQuoteAmount).eq(BigNumber.from("2291450000000000000000"))
+            expect(exchangedQuoteAmount).eq(BigNumber.from("2294200000000000000000"))
         })
 
         // EGE-8: Row 85
@@ -2291,6 +2310,16 @@ describe('Test Margin Intergration', function () {
 
         it("EGE-8: Row 99", async () => {
             const filePath = require('path').resolve(__dirname, '../integration/test-cases/EGE8-99.json')
+            await testCaseProcessor.process(filePath)
+        })
+
+        it("EGE-8: Row 81", async () => {
+            const filePath = require('path').resolve(__dirname, '../integration/test-cases/EGE8-81.json')
+            await testCaseProcessor.process(filePath)
+        })
+
+        it("EGE-8: Row 1111", async () => {
+            const filePath = require('path').resolve(__dirname, '../integration/test-cases/EGE8-1111.json')
             await testCaseProcessor.process(filePath)
         })
     });

@@ -40,6 +40,7 @@ export interface CreatePositionManagerInput {
     priceFeed: string;
     quote: string;
     counterParty : string
+    leverage?: number
 }
 
 
@@ -57,6 +58,7 @@ export interface ConfigPositionManagerInput {
 export interface CreatePositionHouseInput {
     insuranceFund: string,
     positionHouseConfigurationProxy: string
+    positionNotionalConfigProxy: string
     // feePool: string
 }
 
@@ -82,6 +84,10 @@ export interface CreatePositionHouseFunction {
 }
 
 export interface CreateChainLinkPriceFeed {
+
+}
+
+export interface CreatePositionNotionalConfigProxy {
 
 }
 

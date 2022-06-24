@@ -14,7 +14,7 @@ import {DeployDataStore} from "./DataStore";
 import {verifyContract} from "../scripts/utils";
 import {TransactionResponse} from "@ethersproject/abstract-provider";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {PositionInsuranceReserveFunds, PriceAggregator} from "../typeChain";
+import {PancakePairMock, PositionInsuranceReserveFunds, PriceAggregator} from "../typeChain";
 import {HardhatDefenderUpgrades} from "@openzeppelin/hardhat-defender";
 
 
@@ -312,6 +312,15 @@ export class ContractWrapperFactory {
         const deployTx = await Contract.deploy()
         const contract = await deployTx.deployed() as unknown as PriceAggregator
         console.log(`Deployed PriceAggregator: ${contract.address}`)
+        await verifyContract(this.hre, contract.address)
+        return contract;
+    }
+
+    async createPancakePairMock(): Promise<PancakePairMock> {
+        const Contract = await this.hre.ethers.getContractFactory('PancakePairMock')
+        const deployTx = await Contract.deploy()
+        const contract = await deployTx.deployed() as unknown as PancakePairMock
+        console.log(`Deployed PancakePairMock: ${contract.address}`)
         await verifyContract(this.hre, contract.address)
         return contract;
     }

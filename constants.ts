@@ -8,7 +8,7 @@ const LEGACY_SRC_DIR_NAME = join(SRC_DIR_NAME, "legacy")
 
 export const COVERAGE_URL = "http://127.0.0.1:8555"
 export const LOCALHOST_URL = "http://127.0.0.1:8545"
-export const BSC_TESTNET_URL = process.env["BSC_TESTNET_ENDPOINT"] || "https://data-seed-prebsc-1-s1.binance.org:8545/"
+export const BSC_TESTNET_URL = process.env["BSC_TESTNET_ENDPOINT"] || "https://data-seed-prebsc-1-s2.binance.org:8545/"
 export const BSC_MAINNET_URL = process.env["BSC_MAINNET_ENDPOINT"] || "https://bsc-dataseed.binance.org/"
 export const GANACHE_QC_URL = process.env["GANACHE_QC_ENDPOINT"] || "http://geth.nonprodposi.com/"
 export const PRIV_TESTNET_ACCOUNT = process.env["PRIV_TESTNET_ACCOUNT"] || ""

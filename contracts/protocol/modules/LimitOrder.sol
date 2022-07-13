@@ -75,7 +75,7 @@ abstract contract LimitOrderManager is ClaimableAmountManager, PositionHouseStor
                 _order.pip,
                 _order.leverage
             );
-            _withdraw(_pmAddress, _trader, _refundMargin, 0, 0);
+            _withdraw(_pmAddress, _trader, _refundMargin);
         }
         emit CancelLimitOrder(_trader, _pmAddress, _order.pip, _order.orderId);
     }
@@ -93,7 +93,7 @@ abstract contract LimitOrderManager is ClaimableAmountManager, PositionHouseStor
         _emptyLimitOrders(_pmAddress, _trader);
         _emptyReduceLimitOrders(_pmAddress, _trader);
         if (totalRefundMargin != 0) {
-            _withdraw(_pmAddress, _trader, totalRefundMargin, 0, 0);
+            _withdraw(_pmAddress, _trader, totalRefundMargin);
         }
     }
 
@@ -228,7 +228,7 @@ abstract contract LimitOrderManager is ClaimableAmountManager, PositionHouseStor
                     // => close all position and clear position, return sizeOut + 1 mean closed position
                     {
                         (int256 totalReturn, int256 realizedPnl) = PositionHouseFunction.calcReturnWhenOpenReverse(_pmAddress, _trader, sizeOut, openNotional, oldPosition);
-                        _withdraw(_pmAddress, _trader, totalReturn.abs(), oldPosition.margin, realizedPnl);
+                        _withdraw(_pmAddress, _trader, totalReturn.abs());
                     }
                     if (sizeOut == oldPosition.quantity.abs()) {
                         clearPosition(_pmAddress, _trader);
@@ -471,9 +471,7 @@ abstract contract LimitOrderManager is ClaimableAmountManager, PositionHouseStor
     function _withdraw(
         address _positionManager,
         address _trader,
-        uint256 _amount,
-        uint256 _margin,
-        int256 _pnl
+        uint256 _amount
     ) internal virtual;
 
     function _deposit(

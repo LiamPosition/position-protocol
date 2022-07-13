@@ -50,7 +50,8 @@ contract InsuranceFund is
     event Withdraw(
         address indexed _token,
         address indexed _trader,
-        uint256 _amount
+        uint256 _amount,
+        uint256 _originalWithdrawAmount
     );
     event CounterPartyTransferred(address _old, address _new);
     event PosiChanged(address _new);
@@ -132,6 +133,7 @@ contract InsuranceFund is
         address _token = address(
             IPositionManager(_positionManager).getQuoteAsset()
         );
+        uint256 _originalWithdrawAmount = _amount;
 
         if (acceptBonus) {
             uint256 bonusBalance = busdBonusBalances[_positionManager][_trader];
@@ -149,7 +151,7 @@ contract InsuranceFund is
 
             _amount = withdrawBUSDAmount;
             if (_amount == 0) {
-                emit Withdraw(_token, _trader, withdrawBonusAmount);
+                emit Withdraw(_token, _trader, withdrawBonusAmount, _originalWithdrawAmount);
                 return;
             }
         }
@@ -174,12 +176,12 @@ contract InsuranceFund is
             emit SoldPosiForFund(_amountIns[0], _gap);
         }
         IERC20Upgradeable(_token).safeTransfer(_trader, _amount);
-        emit Withdraw(_token, _trader, _amount);
+        emit Withdraw(_token, _trader, _amount, _originalWithdrawAmount);
     }
 
     function reduceBonus(address _positionManager, address _trader, uint256 _reduceAmount)
         external
-        onlyCounterParty
+//        onlyCounterParty
     {
         if (_reduceAmount != 0 && _reduceAmount < busdBonusBalances[_positionManager][_trader]) {
             busdBonusBalances[_positionManager][_trader] -= _reduceAmount;

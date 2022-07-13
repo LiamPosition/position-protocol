@@ -12,9 +12,7 @@ interface IInsuranceFund {
     function withdraw(
         address positionManager,
         address trader,
-        uint256 amount,
-        uint256 margin,
-        int256 pnl
+        uint256 amount
     ) external;
 
     function buyBackAndBurn(address token, uint256 amount) external;

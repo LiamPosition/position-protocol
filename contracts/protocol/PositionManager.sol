@@ -223,11 +223,9 @@ contract PositionManager is
 
     function withdraw(
         address _trader,
-        uint256 _amount,
-        uint256 _margin,
-        int256 _pnl
+        uint256 _amount
     ) external onlyCounterParty {
-        insuranceFund.withdraw(address(this), _trader, _amount, _margin, _pnl);
+        insuranceFund.withdraw(address(this), _trader, _amount);
     }
 
     function openLimitPosition(

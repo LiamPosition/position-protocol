@@ -122,11 +122,9 @@ contract PositionHouseCoinMargin is PositionHouseBase
     function _withdraw(
         address _positionManager,
         address _trader,
-        uint256 _amount,
-        uint256 _margin,
-        int256 _pnl
+        uint256 _amount
     ) internal override
     {
-        IPositionManager(_positionManager).withdraw(_trader, _amount, _margin, _pnl);
+        IPositionManager(_positionManager).withdraw(_trader, _amount);
     }
 }

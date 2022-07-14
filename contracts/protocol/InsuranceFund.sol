@@ -185,6 +185,7 @@ contract InsuranceFund is
     {
         if (_reduceAmount != 0 && _reduceAmount < busdBonusBalances[_positionManager][_trader]) {
             busdBonusBalances[_positionManager][_trader] -= _reduceAmount;
+            return;
         }
 
         // Use when fully liquidated
